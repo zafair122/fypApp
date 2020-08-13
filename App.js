@@ -17,6 +17,7 @@ import MySignInScreen from "./screens/MySignInScreen";
 import MyNotificationsScreen from "./screens/NotificationScreen";
 import MySignUpScreen from "./screens/Register";
 
+console.disableYellowBox = true;
 // class HomeScreen extends React.Component {
 //   static navigationOptions = {
 //     title: 'Home',

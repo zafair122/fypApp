@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View, Image } from "react-native";
 import { Avatar, Button, Card, Title, Paragraph } from "react-native-paper";
-
+import { getMyOrders } from "../src/services/orderService";
+import { retrieveJwt, getUserId } from "../src/utils/localStorage";
 export default class MyOrderScreen extends React.Component {
   static navigationOptions = {
     drawerLabel: "My Order",
@@ -10,6 +11,27 @@ export default class MyOrderScreen extends React.Component {
       <Ionicons name="md-restaurant" size={25} color="#f4511e" />
     ),
   };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      orders: [],
+    };
+  }
+
+  async componentDidMount() {
+    let jwt = await retrieveJwt();
+    if (jwt !== undefined && jwt !== null) {
+      let userId = await getUserId();
+      console.log("user id => ", userId);
+      getMyOrders(userId)
+        .then(({ data }) => {
+          this.setState({ orders: data });
+          console.log("getMyOrders response is => ", data);
+        })
+        .catch((e) => console.log("getMyOrders error => ", e));
+    }
+  }
 
   render() {
     return (

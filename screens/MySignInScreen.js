@@ -15,8 +15,10 @@ import {
 } from "react-native";
 import { Button } from "react-native-paper";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
-
+import { login } from "../src/services/userService";
+import http from "../src/services/httpService";
 const { width: WIDTH } = Dimensions.get("window");
+import { storeJwtLocally } from "../src/utils/localStorage";
 
 export default class MySignInScreen extends React.Component {
   static navigationOptions = {
@@ -32,8 +34,6 @@ export default class MySignInScreen extends React.Component {
       email: "",
       password: "",
     };
-    this.handleChange = this.handleChange.bind();
-    this.login = this.login.bind();
   }
 
   showPass = () => {
@@ -44,13 +44,8 @@ export default class MySignInScreen extends React.Component {
     }
   };
 
-  handleChange = (e) => {
-    this.setState({
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  login = () => {
+  loginUser = () => {
+    const { email, password } = this.state;
     let valid_data = true;
 
     this.state.email_error = null;
@@ -69,6 +64,19 @@ export default class MySignInScreen extends React.Component {
     this.setState({
       update: true,
     });
+
+    login(email, password)
+      .then(({ data }) => {
+        let { token } = data;
+        console.log("login token => ", token);
+        http.setJwt(token);
+        alert("successfully sign in");
+        storeJwtLocally(token);
+      })
+      .catch((e) => {
+        console.log("login error => ", e);
+        alert(e);
+      });
   };
 
   render() {
@@ -101,7 +109,7 @@ export default class MySignInScreen extends React.Component {
                     placeholderTextColor={"white"}
                     underlineColorAndroid="transparent"
                     returnKeyType="next"
-                    onChange={this.handleChange}
+                    onChangeText={(email) => this.setState({ email })}
                     error={this.state.email_error != null}
                     helperText={this.state.email_error}
                     onSubmitEditing={() => this.passwordInput.focus()}
@@ -121,7 +129,7 @@ export default class MySignInScreen extends React.Component {
                     placeholderTextColor={"white"}
                     underlineColorAndroid="transparent"
                     returnKeyType="go"
-                    onChange={this.handleChange}
+                    onChangeText={(password) => this.setState({ password })}
                     error={this.state.password_error != null}
                     helperText={this.state.password_error}
                   />
@@ -139,10 +147,11 @@ export default class MySignInScreen extends React.Component {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.btnAlign}>
-                  <TouchableOpacity style={styles.btnLogin}>
-                    <Text style={styles.textLogin} onPress={this.login}>
-                      Sign In
-                    </Text>
+                  <TouchableOpacity
+                    style={styles.btnLogin}
+                    onPress={() => this.loginUser()}
+                  >
+                    <Text style={styles.textLogin}>Sign In</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={{ paddingBottom: 100, alignItems: "center" }}>

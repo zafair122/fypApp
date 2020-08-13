@@ -16,14 +16,31 @@ import {
   View,
 } from "react-native";
 
+import { retrieveJwt, getUserId } from "../src/utils/localStorage";
+import { getMyOrders } from "../src/services/orderService";
 export default class MyCartScreen extends React.Component {
   static navigationOptions = {
     drawerLabel: "My Cart",
     drawerIcon: () => <Ionicons name="md-cart" size={25} color="#f4511e" />,
   };
+
+  async componentDidMount() {
+    let jwt = await retrieveJwt();
+    if (jwt !== undefined && jwt !== null) {
+      let userId = await getUserId();
+      console.log("user id => ", userId);
+      getMyOrders(userId)
+        .then(({ data }) => {
+          this.setState({ orders: data });
+          console.log("getMyOrders response on cart screen => ", data);
+        })
+        .catch((e) => console.log("getMyOrders error on crt screen=> ", e));
+    }
+  }
   constructor(props) {
     super(props);
     this.state = {
+      orders: [],
       selectAll: false,
       cartItemsIsLoading: false,
       cartItems: [

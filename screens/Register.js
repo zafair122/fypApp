@@ -15,9 +15,10 @@ import {
 } from "react-native";
 import { Button } from "react-native-paper";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
-
+import { signUp } from "../src/services/userService";
+import http from "../src/services/httpService";
 const { width: WIDTH } = Dimensions.get("window");
-
+import { storeJwtLocally } from "../src/utils/localStorage";
 export default class MySignUpScreen extends React.Component {
   constructor() {
     super();
@@ -26,6 +27,13 @@ export default class MySignUpScreen extends React.Component {
       press: false,
       showPass1: true,
       press1: false,
+
+      email: "",
+      name: "",
+      contact: "",
+      password: "",
+      confirmPassword: "",
+      address: "",
     };
   }
 
@@ -45,7 +53,45 @@ export default class MySignUpScreen extends React.Component {
     }
   };
 
+  signUpUser = async () => {
+    console.log("signUp user called");
+    const { name, email, password, contact, address } = this.state;
+
+    let user = {
+      name,
+      email,
+      password,
+      mobile: contact,
+      address,
+      role: "user",
+    };
+
+    console.log("user for creation => ", user);
+
+    signUp(user)
+      .then(({ data }) => {
+        console.log("signup response is => ", data);
+        let { token } = data;
+        console.log("token is => ", token);
+        http.setJwt(token);
+        alert("account created");
+        storeJwtLocally(token);
+      })
+      .catch((e) => {
+        console.log("signUp error is => ", e);
+        alert(e);
+      });
+  };
+
   render() {
+    const {
+      name,
+      email,
+      password,
+      confirmPassword,
+      contact,
+      address,
+    } = this.state;
     return (
       <ImageBackground
         source={require("./assets/sb4.jpg")}
@@ -72,6 +118,8 @@ export default class MySignUpScreen extends React.Component {
                   <TextInput
                     style={styles.input}
                     placeholder={"Enter Name"}
+                    value={name}
+                    onChangeText={(name) => this.setState({ name })}
                     placeholderTextColor={"white"}
                     underlineColorAndroid="transparent"
                     returnKeyType="next"
@@ -91,6 +139,8 @@ export default class MySignUpScreen extends React.Component {
                     placeholderTextColor={"white"}
                     underlineColorAndroid="transparent"
                     returnKeyType="next"
+                    value={email}
+                    onChangeText={(email) => this.setState({ email })}
                     onSubmitEditing={() => this.passwordInput.focus()}
                   />
                 </View>
@@ -107,6 +157,8 @@ export default class MySignUpScreen extends React.Component {
                     placeholderTextColor={"white"}
                     underlineColorAndroid="transparent"
                     returnKeyType="next"
+                    value={contact}
+                    onChangeText={(contact) => this.setState({ contact })}
                     onSubmitEditing={() => this.passwordInput.focus()}
                   />
                 </View>
@@ -120,6 +172,8 @@ export default class MySignUpScreen extends React.Component {
                   <TextInput
                     style={styles.input}
                     placeholder={"Password"}
+                    value={password}
+                    onChangeText={(password) => this.setState({ password })}
                     secureTextEntry={this.state.showPass}
                     placeholderTextColor={"white"}
                     underlineColorAndroid="transparent"
@@ -150,6 +204,10 @@ export default class MySignUpScreen extends React.Component {
                     placeholder={"Confirm Password"}
                     secureTextEntry={this.state.showPass1}
                     placeholderTextColor={"white"}
+                    value={confirmPassword}
+                    onChangeText={(confirmPassword) =>
+                      this.setState({ confirmPassword })
+                    }
                     underlineColorAndroid="transparent"
                     returnKeyType="next"
                   />
@@ -171,12 +229,17 @@ export default class MySignUpScreen extends React.Component {
                     placeholder={"Your Address"}
                     placeholderTextColor={"white"}
                     numberOfLines={10}
+                    value={address}
+                    onChangeText={(address) => this.setState({ address })}
                     multiline={true}
                     returnKeyType="go"
                   />
                 </View>
                 <View style={styles.btnAlign}>
-                  <TouchableOpacity style={styles.btnLogin}>
+                  <TouchableOpacity
+                    style={styles.btnLogin}
+                    onPress={() => this.signUpUser()}
+                  >
                     <Text style={styles.textLogin}>Sign Up</Text>
                   </TouchableOpacity>
                 </View>
