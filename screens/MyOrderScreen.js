@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, FlatList } from "react-native";
 import { Avatar, Button, Card, Title, Paragraph } from "react-native-paper";
 import { getMyOrders } from "../src/services/orderService";
 import { retrieveJwt, getUserId } from "../src/utils/localStorage";
@@ -32,8 +32,8 @@ export default class MyOrderScreen extends React.Component {
         .catch((e) => console.log("getMyOrders error => ", e));
     }
   }
-
-  render() {
+  renderItem = (item) => {
+    const { _id, amount, productName, sendingAddress } = item;
     return (
       <View style={{ margin: 5 }}>
         <Card style={{ elevation: 5 }}>
@@ -46,20 +46,32 @@ export default class MyOrderScreen extends React.Component {
             />
             <View>
               <Card.Content>
-                <Title>Dish</Title>
+                <Title>{productName}</Title>
                 <View style={{ flexDirection: "row" }}>
                   <Paragraph style={styles.paraText}>Price</Paragraph>
                   <Paragraph style={styles.paraText} style={{ marginLeft: 10 }}>
-                    200 RS
+                    {amount} RS
                   </Paragraph>
                 </View>
               </Card.Content>
               <Card.Content>
-                <Paragraph>Reverse Timer</Paragraph>
+                <Paragraph>{sendingAddress}</Paragraph>
               </Card.Content>
             </View>
           </View>
         </Card>
+      </View>
+    );
+  };
+
+  render() {
+    return (
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={this.state.orders}
+          renderItem={({ item }) => this.renderItem(item)}
+          keyExtractor={(item) => item._id}
+        />
       </View>
     );
   }

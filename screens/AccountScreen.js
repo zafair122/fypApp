@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { Component } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import p from "./assets/p1.jpg";
+import { getUserId, retrieveJwt } from "../src/utils/localStorage";
+import { getProfile } from "../src/services/userService";
 
 export default class MyAccountScreen extends Component {
   static navigationOptions = {
@@ -9,22 +11,40 @@ export default class MyAccountScreen extends Component {
     drawerIcon: () => <Ionicons name="md-contact" size={25} color="#f4511e" />,
   };
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}></View>
-        <Image style={styles.avatar} source={p} />
-        <View style={styles.body}>
-          <View style={styles.bodyContent}>
-            <Text style={styles.name}>Zafair Mushtaq</Text>
-            <Text style={styles.info}>zafairmushtaq122@gmail.com</Text>
-            <Text style={styles.info}>+92 3049610062</Text>
-            <Text style={styles.description}>Gujrat, Punjab, Pakistan</Text>
+  constructor(props) {
+    super(props);
+    this.state = { user: {} };
+  }
 
-            <TouchableOpacity style={styles.buttonContainer}>
-              <Text>Edit Profile</Text>
-            </TouchableOpacity>
-          </View>
+  async componentDidMount() {
+    let jwt = await retrieveJwt();
+    if (jwt !== undefined && jwt !== null) {
+      let userId = await getUserId();
+      getProfile(userId)
+        .then(({ data }) => {
+          this.setState({ user: data });
+          console.log("getMyProfile response is => ", data);
+        })
+        .catch((e) => console.log("getMyOrders error => ", e));
+    }
+  }
+
+  render() {
+    const { name, email, mobile, address } = this.state.user;
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={styles.header} />
+        <Image style={styles.avatar} source={p} />
+
+        <View style={styles.bodyContent}>
+          <Text style={styles.name}>{name ? name : ""}</Text>
+          <Text style={styles.info}>{email ? email : ""}</Text>
+          <Text style={styles.info}>{mobile ? mobile : ""}</Text>
+          <Text style={styles.description}>{address ? address : ""}</Text>
+
+          <TouchableOpacity style={styles.buttonContainer}>
+            <Text>Edit Profile</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -47,18 +67,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     marginTop: 130,
   },
-  name: {
-    fontSize: 22,
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  body: {
-    marginTop: 40,
-  },
   bodyContent: {
     flex: 1,
     alignItems: "center",
     padding: 30,
+    marginTop: 40,
   },
   name: {
     fontSize: 28,

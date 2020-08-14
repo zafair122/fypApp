@@ -5,9 +5,18 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default class MyHomeMenuCArd extends React.Component {
   AlertOption = () => {
+    const {
+      _id,
+      categoryName,
+      productDescription,
+      productImage,
+      productName,
+      productPrice,
+    } = this.props.item;
+
     Alert.alert(
-      "Dish Name",
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam consequat nisl id ultrices congue. Sed sollicitudin eu nisi a consectetur. Praesent ex leo, pharetra sit amet turpis eu, efficitur pharetra orci",
+      productName,
+      productDescription,
       [
         {
           text: "Cancel",
@@ -21,6 +30,14 @@ export default class MyHomeMenuCArd extends React.Component {
   };
 
   render() {
+    const {
+      _id,
+      categoryName,
+      productDescription,
+      productImage,
+      productName,
+      productPrice,
+    } = this.props.item;
     return (
       <View style={{ margin: 5 }}>
         <Card style={{ elevation: 5 }}>
@@ -33,16 +50,16 @@ export default class MyHomeMenuCArd extends React.Component {
             />
             <View>
               <Card.Content>
-                <Title>Dish</Title>
+                <Title>{productName}</Title>
                 <View style={{ flexDirection: "row" }}>
                   <Paragraph style={styles.paraText}>Price</Paragraph>
                   <Paragraph style={styles.paraText} style={{ marginLeft: 10 }}>
-                    200 RS
+                    {productPrice} RS
                   </Paragraph>
                 </View>
               </Card.Content>
               <Card.Content>
-                <Paragraph>Available Product Description</Paragraph>
+                <Paragraph>{productDescription}</Paragraph>
               </Card.Content>
             </View>
             <View></View>
@@ -61,7 +78,11 @@ export default class MyHomeMenuCArd extends React.Component {
             >
               Detail
             </Button>
-            <Button mode="contained" style={styles.btnAdd}>
+            <Button
+              mode="contained"
+              style={styles.btnAdd}
+              onPress={() => this.props.onAddToCartPress(this.props.item)}
+            >
               Add to Cart
             </Button>
           </View>

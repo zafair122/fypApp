@@ -17,7 +17,7 @@ import {
 } from "react-native";
 
 import { retrieveJwt, getUserId } from "../src/utils/localStorage";
-import { getMyOrders } from "../src/services/orderService";
+import { getMyOrders, deleteOrder } from "../src/services/orderService";
 export default class MyCartScreen extends React.Component {
   static navigationOptions = {
     drawerLabel: "My Cart",
@@ -31,6 +31,10 @@ export default class MyCartScreen extends React.Component {
       console.log("user id => ", userId);
       getMyOrders(userId)
         .then(({ data }) => {
+          data.forEach((item) => {
+            item.checked = 1;
+          });
+          console.log("updated => ", data);
           this.setState({ orders: data });
           console.log("getMyOrders response on cart screen => ", data);
         })
@@ -98,9 +102,9 @@ export default class MyCartScreen extends React.Component {
   }
 
   selectHandler = (index, value) => {
-    const newItems = [...this.state.cartItems]; // clone the array
+    const newItems = [...this.state.orders]; // clone the array
     newItems[index]["checked"] = value == 1 ? 0 : 1; // set the new value
-    this.setState({ cartItems: newItems }); // set new state
+    this.setState({ orders: newItems }); // set new state
   };
 
   selectHandlerAll = (value) => {
@@ -127,12 +131,12 @@ export default class MyCartScreen extends React.Component {
         {
           text: "Delete",
           onPress: () => {
-            let updatedCart = this.state.cartItems; /* Clone it first */
+            let updatedCart = this.state.orders; /* Clone it first */
             updatedCart.splice(
               index,
               1
             ); /* Remove item from the cloned cart state */
-            this.setState(updatedCart); /* Update the state */
+            this.setState({ orders: updatedCart }); /* Update the state */
           },
         },
       ],
@@ -141,17 +145,17 @@ export default class MyCartScreen extends React.Component {
   };
 
   quantityHandler = (action, index) => {
-    const newItems = [...this.state.cartItems]; // clone the array
+    const newItems = [...this.state.orders]; // clone the array
 
-    let currentQty = newItems[index]["qty"];
+    let currentQty = newItems[index]["quantity"];
 
     if (action == "more") {
-      newItems[index]["qty"] = currentQty + 1;
+      newItems[index]["quantity"] = currentQty + 1;
     } else if (action == "less") {
-      newItems[index]["qty"] = currentQty > 1 ? currentQty - 1 : 1;
+      newItems[index]["quantity"] = currentQty > 1 ? currentQty - 1 : 1;
     }
 
-    this.setState({ cartItems: newItems }); // set new state
+    this.setState({ orders: newItems }); // set new state
   };
 
   subtotalPrice = () => {
@@ -166,12 +170,57 @@ export default class MyCartScreen extends React.Component {
     return 0;
   };
 
+  getOrderIds = () => {
+    const { orders } = this.state;
+    let ids = [];
+    orders.forEach((order) => {
+      if (order.checked == 1) {
+        ids.push(order._id);
+      }
+    });
+    return ids;
+  };
+  updateOrdersInstate = (orderIds) => {
+    //to update the state write code here
+  };
+  checkout = async () => {
+    let userId = await getUserId();
+    let orderIds = this.getOrderIds();
+
+    let promises = [];
+
+    if (orderIds.length > 0) {
+      orderIds.forEach((id) => {
+        promises.push(
+          new Promise((resolve, reject) => {
+            deleteOrder(userId, id)
+              .then((res) => {
+                resolve(res);
+              })
+              .catch((e) => reject(e));
+          })
+        );
+      });
+
+      Promise.all(promises)
+        .then((responses) => {
+          console.log(responses);
+          alert("successful");
+          this.updateOrdersInstate(orderIds);
+          console.log("order deleted ");
+        })
+        .catch((e) => console.log("error of deleting order => ", e));
+    } else {
+      //no item is selected yet
+    }
+  };
+
   render() {
     const styles = StyleSheet.create({
       centerElement: { justifyContent: "center", alignItems: "center" },
     });
 
-    const { cartItems, cartItemsIsLoading, selectAll } = this.state;
+    const { cartItems, cartItemsIsLoading, selectAll, orders } = this.state;
 
     return (
       <View style={{ flex: 1, backgroundColor: "#f6f6f6" }}>
@@ -196,8 +245,8 @@ export default class MyCartScreen extends React.Component {
           </View>
         ) : (
           <ScrollView>
-            {cartItems &&
-              cartItems.map((item, i) => (
+            {orders &&
+              orders.map((item, i) => (
                 <View
                   key={i}
                   style={{
@@ -253,13 +302,13 @@ export default class MyCartScreen extends React.Component {
                       }}
                     >
                       <Text numberOfLines={1} style={{ fontSize: 15 }}>
-                        {item.name}
+                        {item.productName}
                       </Text>
                       <Text
                         numberOfLines={1}
                         style={{ color: "#333333", marginBottom: 10 }}
                       >
-                        ${item.qty * item.salePrice}
+                        ${item.amount}
                       </Text>
                       <View style={{ flexDirection: "row" }}>
                         <TouchableOpacity
@@ -283,7 +332,7 @@ export default class MyCartScreen extends React.Component {
                             fontSize: 13,
                           }}
                         >
-                          {item.qty}
+                          {item.quantity}
                         </Text>
                         <TouchableOpacity
                           onPress={() => this.quantityHandler("more", i)}
@@ -407,7 +456,7 @@ export default class MyCartScreen extends React.Component {
                     borderRadius: 5,
                   },
                 ]}
-                onPress={() => console.log("test")}
+                onPress={() => this.checkout()}
               >
                 <Text style={{ color: "#ffffff" }}>Checkout</Text>
               </TouchableOpacity>

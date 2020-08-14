@@ -7,6 +7,7 @@ import {
   ImageBackground,
   ScrollView,
   TextInput,
+  FlatList,
 } from "react-native";
 import {
   Avatar,
@@ -20,7 +21,8 @@ import { Ionicons } from "@expo/vector-icons";
 import MyHomeMenuCard from "./MyHomeMenuCard";
 import { getProducts } from "../src/services/productService";
 import http from "../src/services/httpService";
-import { retrieveJwt } from "../src/utils/localStorage";
+import { retrieveJwt, getUserId } from "../src/utils/localStorage";
+import { postOrder } from "../src/services/orderService";
 export default class MyHomeScreen extends React.Component {
   static navigationOptions = {
     drawerLabel: "Home",
@@ -37,6 +39,32 @@ export default class MyHomeScreen extends React.Component {
     this.getAllProducts();
   }
 
+  onAddToCartPress = async (item) => {
+    const {
+      _id,
+      categoryName,
+      productDescription,
+      productImage,
+      productName,
+      productPrice,
+    } = item;
+    let userId = await getUserId();
+    console.log("user id => ", userId);
+    let order = {
+      productName: productName,
+      quantity: 2,
+      sendingAddress: "Gujrat",
+      amount: productPrice,
+    };
+    console.log("orderObject object => ", order);
+    postOrder(userId, order)
+      .then(({ data }) => {
+        alert("Successfully added");
+        console.log("submit order response => ", data);
+      })
+      .catch((e) => console.log("submit order error => ", e));
+  };
+
   getAllProducts = async () => {
     let jwt = await retrieveJwt();
     if (jwt !== undefined && jwt !== null) {
@@ -50,21 +78,23 @@ export default class MyHomeScreen extends React.Component {
       .catch((e) => console.log("getProducts error => ", e));
   };
 
+  renderItem = (item) => {
+    return (
+      <MyHomeMenuCard
+        item={item}
+        onAddToCartPress={(item) => this.onAddToCartPress(item)}
+      />
+    );
+  };
+
   render() {
     return (
-      <View>
-        {/* <MyHeader name="Search" /> */}
-        <ScrollView>
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-          <MyHomeMenuCard />
-        </ScrollView>
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={this.state.products}
+          renderItem={({ item }) => this.renderItem(item)}
+          keyExtractor={(item) => item._id}
+        />
       </View>
     );
   }

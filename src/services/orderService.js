@@ -9,9 +9,9 @@ export function postOrder(id, order) {
   return http.post(postOrderUrl, order);
 }
 
-export function deleteOrder(id) {
-  let deleteOrderUrl = apiEndPoint + "/" + id;
-  return http.delete(deleteOrderUrl);
+export function deleteOrder(userId, orderId) {
+  let deleteOrderUrl = apiEndPoint + "/" + userId;
+  return http.delete(deleteOrderUrl, { id: orderId });
 }
 export function getMyOrders(id) {
   let myOrdersUrl = myOrdersEndPoint + "/" + id;
